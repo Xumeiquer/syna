@@ -6,19 +6,20 @@
   {{- $.Scratch.Set "page_description" (.Params.summary | default .Summary) -}}
 {{- end -}}
 <head>
-  <meta name="theme" content="Syna">
-  <meta name="theme-version" content="v0.17.3">
-  <meta name="theme-url" content="https://syna.okkur.org">
-  <meta name="theme-description" content="Highly customizable open source theme for Hugo based static websites">
-  <meta name="theme-author" content="Okkur Labs">
-  <meta name="theme-author-url" content="https://about.okkur.org">
+  
   <meta charset="utf-8">
+  <title>
+    {{- $title | safeHTML -}}
+  </title>
+  <meta name="description" content="{{- .Scratch.Get "page_description" -}}">
+
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="google" content="notranslate" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="description" content="{{- .Scratch.Get "page_description" -}}">
+  
   {{ template "_internal/opengraph.html" . }}
+  
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ $title }}" />
   <meta name="twitter:description" content="{{- .Scratch.Get "page_description" -}}">
@@ -40,12 +41,6 @@
     <meta name="twitter:image" content="{{ $.Site.Params.image }}">
   {{- end }}
   {{ with .Site.Params.name -}}<meta name="author" content="{{ . }}">{{- end }}
-
-  {{ hugo.Generator }}
-
-  <title>
-    {{- $title | safeHTML -}}
-  </title>
 
   {{ "<!-- Theme Styles -->" | safeHTML }}
   {{ partial "extra/grid-css.html" -}}
@@ -75,6 +70,10 @@
       <link rel="apple-touch-icon-precomposed" href="/favicon.png">
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     {{ end }}
+  {{- end }}
+
+  {{- with .Site.Params.cookie }}
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css" >
   {{- end }}
 
   <script>

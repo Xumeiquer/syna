@@ -14,6 +14,7 @@ module.exports = {
     react: './assets/js/react.js',
     search: './assets/js/search.js',
     stripe: './assets/js/stripe.js',
+    newsletter: './assets/js/newsletter.js',
     'dev-jq-helpers': './assets/js/helpers/jq-helpers.js'
   },
   output: {

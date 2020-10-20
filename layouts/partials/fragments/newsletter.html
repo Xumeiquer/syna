@@ -1,0 +1,140 @@
+{{- $self := .self -}}
+{{- if .Params.recaptcha -}}
+  {{- .page_scratch.Add "js" (dict "url" "https://www.google.com/recaptcha/api.js") -}}
+{{- end }}
+{{- .page_scratch.Add "js" (dict "file" "syna-newsletter.js") -}}
+{{- $bg := .self.Scratch.Get "bg" }}
+
+{{ "<!-- Newsletter -->" | safeHTML }}
+
+{{- partial "helpers/container.html" (dict "start" true "in_slot" .in_slot "bg" $bg "id" .id "Params" .Params) -}}
+  {{- partial "helpers/section-header.html" (dict "self" $self "bg" $bg "params" .Params) }}
+  <div class="row">
+    <div class="col-12">
+      <form
+        class="newsletter position-relative"
+        method="POST"
+        name="{{- .Params.form_name | default (printf "newsletter-form-%s" .Name) }}"
+        id="{{- .Params.form_name | default (printf "newsletter-form-%s" .Name) }}"
+        {{- if .Params.netlify -}}
+          {{- safeHTMLAttr (print " data-has-netlify=\"true\" netlify") -}}
+        {{- else -}}
+          {{- safeHTMLAttr (printf " action=\"%s\"" (.Params.post_url | default (printf "https://formspree.io/%s" .Params.email))) -}}
+        {{- end -}}
+        {{- if and (isset .Params "email") -}}
+          {{- safeHTMLAttr (print " data-has-formspree=\"true\"") -}}
+        {{- end }}>
+          <div class="row py-3 should-fade">
+            <div class="col-md-6 offset-md-3">
+              {{- range (.Params.fields.custom | default slice) }}
+                {{- $field := . }}
+                <div class="form-group">
+                  <input
+                    id="{{- print .name -}}"
+                    name="{{- print .name -}}"
+                    class="form-control"
+                    type="text"
+
+                    {{- if eq .name "name" }}
+                      {{ safeHTMLAttr "data-validation" }}
+                    {{- else if eq .name "email" }}
+                      {{ safeHTMLAttr "data-validation='email'" }}
+                    {{- else if eq .name "phone" }}
+                      {{ safeHTMLAttr "data-validation=regex'" }}
+                      {{ safeHTMLAttr "data-validation-regex='^([0-9,\\+]+)$'" }}
+                    {{- end -}}
+
+                    {{- with .validation -}}
+                      {{- if eq . true }}
+                        {{ safeHTMLAttr "data-validation" }}
+                      {{- else }}
+                        {{ safeHTMLAttr (printf "data-validation='%s'" .) }}
+                      {{- end -}}
+
+                      {{- with $field.validation_regex }}
+                        {{ safeHTMLAttr (printf "data-validation-regex='%s'" .) }}
+                      {{- end -}}
+                    {{- end -}}
+
+                    {{- if .required }}
+                      {{ safeHTMLAttr "required" }}
+                    {{- end }}
+
+                    data-validation-error-msg="{{ .error | default (i18n (printf "newsletter.defaultError" .name)) }}"
+                    placeholder="{{ with .text }}{{ . | markdownify }}{{ end }}">
+                  <div class="px-2" data-error id="{{- printf "%s-error" .name -}}"></div>
+                </div>
+              {{- end }}
+            </div>
+            <div class="col-lg-12 text-center">
+              {{/* <div class="captcha-error alert alert-danger d-none" id="captcha-error">
+                  {{- .Params.captchaErrorMsg | default (i18n "newsletter.defaultCaptchaError") }} {{ .Params.email }}.
+              </div>
+              <div class="generic-error alert alert-danger d-none" id="generic-error">
+                {{- with .Params.message.error -}}
+                  {{- . | markdownify -}}
+                {{- else -}}
+                  {{- i18n "newsletter.defaultGenericError" }} {{ .Params.email -}}.
+                {{- end }}
+              </div>
+              <noscript>
+                <div class="alert alert-danger py-2" id="js-error">
+                  {{- i18n "newsletter.defaultJsError" }} {{ .Params.email }}.
+                </div>
+              </noscript> */}}
+              {{- if and .Params.recaptcha (not .Params.netlify) }}
+                <div class="g-recaptcha-container">
+                  <span class="g-recaptcha-filler"></span>
+                  <button
+                    class="g-recaptcha btn btn-primary submit-btn"
+                    type="submit"
+                    data-sitekey="{{ .Params.recaptcha.sitekey }}"
+                    data-size="invisible"
+                    data-badge="inline"
+                    data-callback="onNewsletterCaptcha"
+                    disabled>
+                    {{- .Params.button_text | default (i18n "newsletter.defaultButton") }}
+                  </button>
+                  <span class="filler"></span>
+                </div>
+              {{- else }}
+                {{- if .Params.netlify }}
+                  <div netlify-recaptcha></div>
+                {{- end }}
+                <button
+                  class="btn submit-btn
+                    {{- if eq $bg "primary" -}}
+                      {{- printf " btn-%s" "dark" -}}
+                    {{- else -}}
+                      {{- printf " btn-%s" "primary" -}}
+                    {{- end -}}
+                  "
+                  type="submit">
+                  {{- .Params.button_text | default (i18n "newsletter.defaultButton") }}
+                </button>
+              {{- end }}
+            </div>
+          </div>
+          {{- range .Params.fields.hidden -}}
+            {{- if eq .name "site" }}
+              <input type="hidden" name="{{ .name }}" value="{{ $.root.Page.Permalink }}"/>
+            {{- else if eq .name "page" }}
+              <input type="hidden" name="{{ .name }}" value="{{ $.root.Page.RelPermalink }}"/>
+            {{- else }}
+              <input type="hidden" name="{{ .name }}" value="{{ .value }}"/>
+            {{- end -}}
+          {{- end -}}
+          <div class="generic-success mb-0 mb-3 hidden" id="generic-success">
+            <div class="alert alert-success">
+              {{- with .Params.message.success -}}
+                {{- . | markdownify -}}
+              {{- else -}}
+                {{- i18n "newsletter.defaultGenericSuccess" -}}
+              {{- end }}
+            </div>
+            <span class="btn btn-primary" data-action="return-form">Return</span>
+          </div>
+      </form>
+    </div>
+  </div>
+{{- partial "helpers/container.html" (dict "end" true "in_slot" .in_slot) -}}
